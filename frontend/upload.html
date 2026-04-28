@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Issue — Raksha</title>
+    <meta name="description" content="Report a humanitarian issue on the Raksha platform.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .photo-upload-zone {
+            border: 2px dashed var(--border-glass-hover);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-glass);
+            position: relative;
+        }
+        .photo-upload-zone:hover {
+            border-color: var(--accent-indigo);
+            background: rgba(99,102,241,0.05);
+        }
+        .photo-upload-zone.has-image {
+            border-style: solid;
+            border-color: var(--accent-teal);
+            padding: 0.5rem;
+        }
+        .photo-upload-zone input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .photo-upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .photo-upload-text { color: var(--text-secondary); font-size: 0.9rem; }
+        .photo-upload-hint { color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; }
+        .photo-preview {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+        }
+        .photo-preview-container { position: relative; }
+        .photo-remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(239,68,68,0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .photo-label {
+            margin-top: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: rgba(99,102,241,0.08);
+            border-left: 3px solid var(--accent-indigo);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        .submitted-report {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            animation: fadeUp 0.5s ease-out;
+        }
+        .submitted-report img {
+            width: 100%;
+            max-height: 350px;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+            margin-bottom: 0.75rem;
+        }
+        .submitted-report .report-caption {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand"><img src="assets/logo.png" alt="Raksha">Raksha</a>
+            <div class="menu-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+            <ul class="navbar-nav" id="navbarNav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="upload.html" class="active">Report</a></li>
+                <li><a href="map.html">Map</a></li>
+                <li><a href="volunteer.html">Volunteers</a></li>
+            </ul>
+            <div class="navbar-actions" id="navAuth">
+                <a href="login.html" class="btn btn-secondary btn-sm">Log in</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Report a Problem</h1>
+            <p>Describe the issue and optionally attach a photo to help responders understand the situation</p>
+        </div>
+
+        <!-- Volunteer notice: issues go to admin review -->
+        <div id="volunteerReadOnlyBanner" class="alert alert-info hidden">
+            <strong>Heads up:</strong> Issues you submit will be sent for admin review before becoming visible to the team.
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="grid grid-2">
+            <!-- Issue Details Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📝 Issue Details</h2>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" onsubmit="handleFormSubmit(event)">
+                        <div class="form-group">
+                            <label class="form-label" for="city">City *</label>
+                            <input type="text" id="city" class="form-control"
+                                   placeholder="e.g., Mumbai, Delhi, Bangalore" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="location">Location / Area *</label>
+                            <input type="text" id="location" class="form-control"
+                                   placeholder="e.g., Dharavi, Sector 5" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="issue">Issue Description *</label>
+                            <textarea id="issue" class="form-control" rows="4"
+                                      placeholder="Describe the problem — what is happening, how severe it is, and what help is needed."
+                                      required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="peopleCount">Number of People Affected *</label>
+                            <input type="number" id="peopleCount" class="form-control"
+                                   placeholder="e.g., 100" min="1" required>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label class="form-label" for="contactInfo">Contact Information</label>
+                            <input type="text" id="contactInfo" class="form-control"
+                                   placeholder="e.g., contact@ngo.org or +91-98765-43210">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitBtn">
+                            Submit Report
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Photo Upload (Optional) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📷 Attach Photo (Optional)</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-2" style="font-size: 0.9rem;">
+                        Upload a photo of the problem to help responders understand the situation —
+                        <em>"See this is the landmark. This is the floodplain. This is the disaster and all."</em>
+                    </p>
+
+                    <div class="photo-upload-zone" id="photoZone">
+                        <input type="file" id="photoFile" accept="image/*" onchange="handlePhotoSelect(event)">
+                        <div id="photoPlaceholder">
+                            <div class="photo-upload-icon">📸</div>
+                            <div class="photo-upload-text">Click or drag a photo here</div>
+                            <div class="photo-upload-hint">JPG, PNG, or WEBP — max 10 MB</div>
+                        </div>
+                        <div id="photoPreviewContainer" class="photo-preview-container hidden">
+                            <img id="photoPreview" class="photo-preview" alt="Problem photo preview">
+                            <button type="button" class="photo-remove-btn" onclick="removePhoto(event)" title="Remove photo">✕</button>
+                        </div>
+                    </div>
+
+                    <div class="photo-label" id="photoLabel" style="display:none;">
+                        📍 <em>"See this is the landmark. This is the floodplain. This is the disaster and all."</em>
+                    </div>
+
+                    <!-- Optional image description -->
+                    <div class="form-group mt-2">
+                        <label class="form-label" for="photoDescription">Photo Description (Optional)</label>
+                        <textarea id="photoDescription" class="form-control" rows="3"
+                                  placeholder="Describe what the photo shows — landmarks, flooding extent, damage visible, nearby structures..."></textarea>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Submitted Reports Preview -->
+        <div id="submittedReports"></div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script src="js/auth-guard.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/upload.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initAuthGuard();
+            const user = window.RakshaAuth ? window.RakshaAuth.getUser() : null;
+            if (user && user.role === 'volunteer') {
+                const banner = document.getElementById('volunteerReadOnlyBanner');
+                if (banner) banner.classList.remove('hidden');
+            }
+        });
+
+        let selectedPhoto = null;
+        let selectedPhotoDataUrl = null;
+
+        function handlePhotoSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file.');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert('Photo must be under 10 MB.');
+                return;
+            }
+
+            selectedPhoto = file;
+
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                selectedPhotoDataUrl = ev.target.result;
+                document.getElementById('photoPreview').src = selectedPhotoDataUrl;
+                document.getElementById('photoPlaceholder').classList.add('hidden');
+                document.getElementById('photoPreviewContainer').classList.remove('hidden');
+                document.getElementById('photoZone').classList.add('has-image');
+                document.getElementById('photoLabel').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePhoto(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            selectedPhoto = null;
+            selectedPhotoDataUrl = null;
+            document.getElementById('photoFile').value = '';
+            document.getElementById('photoPlaceholder').classList.remove('hidden');
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            document.getElementById('photoZone').classList.remove('has-image');
+            document.getElementById('photoLabel').style.display = 'none';
+        }
+
+        // Override upload.js's handleFormSubmit — this version combines city+area and handles photo
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = 'Submitting...';
+            btn.disabled = true;
+
+            try {
+                // Build form data — combine city + area into one location string
+                const city = document.getElementById('city').value.trim();
+                const area = document.getElementById('location').value.trim();
+                const formData = {
+                    location: city ? `${city} — ${area}` : area,
+                    issue: document.getElementById('issue').value,
+                    people_count: parseInt(document.getElementById('peopleCount').value),
+                    latitude: 0,
+                    longitude: 0,
+                    contact_info: document.getElementById('contactInfo').value || null
+                };
+
+                const result = await uploadIssue(formData);
+
+                if (result && result.success) {
+                    // Show success
+                    const container = document.getElementById('alertContainer');
+                    container.innerHTML = '<div class="alert alert-success">✅ Issue reported successfully!</div>';
+
+                                    // Capture values BEFORE resetting the form
+                    const capturedCity = document.getElementById('city').value;
+                    const capturedPhoto = selectedPhotoDataUrl;
+                    const capturedPhotoDesc = document.getElementById('photoDescription').value;
+
+                    // Reset form
+                    document.getElementById('uploadForm').reset();
+                    removePhoto(new Event('click'));
+
+                    // Show the submitted report with captured values
+                    showSubmittedReport(formData, capturedCity, capturedPhoto, capturedPhotoDesc);
+                } else {
+                    throw new Error(result?.detail || 'Upload failed');
+                }
+            } catch (err) {
+                const container = document.getElementById('alertContainer');
+                container.innerHTML = `<div class="alert alert-error">❌ ${err.message}</div>`;
+            } finally {
+                btn.textContent = 'Submit Report';
+                btn.disabled = false;
+            }
+        };
+
+        function showSubmittedReport(formData, city, photoDataUrl, photoDesc) {
+            const reportsDiv = document.getElementById('submittedReports');
+
+            let photoHTML = '';
+            if (photoDataUrl) {
+                photoHTML = `
+                    <img src="${photoDataUrl}" alt="Problem photo — ${city}">
+                    <div class="photo-label" style="display:block; margin-top:0;">
+                        📍 <em>"See this is the landmark. This is the floodplain. This is the disaster and all."</em>
+                    </div>
+                    ${photoDesc ? `<p class="report-caption">📝 ${photoDesc}</p>` : ''}
+                `;
+            }
+
+            const reportCard = document.createElement('div');
+            reportCard.className = 'submitted-report';
+            reportCard.innerHTML = `
+                <h3 style="margin-bottom: 0.75rem;">📋 Submitted: ${formData.location}, ${city}</h3>
+                ${photoHTML}
+                <p style="margin-top: 0.75rem; color: var(--text-secondary);">${formData.issue}</p>
+                <div class="flex gap-2 mt-1" style="flex-wrap: wrap;">
+                    <span class="badge badge-pending">👥 ${formData.people_count} people affected</span>
+                    <span class="badge badge-assigned">📍 ${city}</span>
+                </div>
+            `;
+
+            reportsDiv.prepend(reportCard);
+        }
+    </script>
+</body>
+</html>

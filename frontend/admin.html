@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — Raksha</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand"><img src="assets/logo.png" alt="Raksha">Raksha</a>
+            <div class="menu-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+            <ul class="navbar-nav" id="navbarNav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="map.html">Map</a></li>
+                <li><a href="volunteer.html">Volunteers</a></li>
+                <li><a href="admin.html" class="active">Admin</a></li>
+            </ul>
+            <div class="navbar-actions">
+                <span class="text-muted" id="adminName" style="font-size:0.85rem;"></span>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">Log out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Admin Panel</h1>
+            <p>Manage users and approve volunteer requests</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">-</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statPending">-</div>
+                <div class="stat-label">Pending Approval</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statNGOs">-</div>
+                <div class="stat-label">NGOs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statVolunteers">-</div>
+                <div class="stat-label">Volunteers</div>
+            </div>
+        </div>
+
+        <!-- Pending Approvals -->
+        <div class="card mb-2">
+            <div class="card-header">
+                <h2 class="card-title">⏳ Pending Volunteer Approvals</h2>
+                <button class="btn btn-outline btn-sm" onclick="loadPending()">Refresh</button>
+            </div>
+            <div id="pendingList">
+                <div class="text-center text-muted" style="padding:2rem;">
+                    <div class="spinner"></div>
+                    Loading pending approvals...
+                </div>
+            </div>
+        </div>
+
+        <!-- All Users -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">👥 All Users</h2>
+                <div class="flex gap-1">
+                    <select class="form-control" id="filterRole" onchange="loadUsers()" style="width:auto;">
+                        <option value="">All Roles</option>
+                        <option value="ngo">NGO</option>
+                        <option value="volunteer">Volunteer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button class="btn btn-outline btn-sm" onclick="loadUsers()">Refresh</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="6" class="text-center"><div class="spinner"></div>Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script src="js/auth-guard.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let token = localStorage.getItem('raksha_token');
+        let user = JSON.parse(localStorage.getItem('raksha_user') || '{}');
+
+        // Guard: verify admin with backend, not just localStorage
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initAuthGuard(['admin']);
+            user = window.RakshaAuth.getUser() || {};
+            token = window.RakshaAuth.getToken();
+            if (user.display_name) document.getElementById('adminName').textContent = user.display_name;
+            loadPending();
+            loadUsers();
+        });
+
+        function toggleMenu() { document.getElementById('navbarNav').classList.toggle('active'); }
+        function logout() {
+            localStorage.removeItem('raksha_user');
+            localStorage.removeItem('raksha_token');
+            window.location.href = 'login.html';
+        }
+
+        async function authFetch(url, opts = {}) {
+            opts.headers = { ...opts.headers, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+            const res = await fetch(url, opts);
+            if (res.status === 401 || res.status === 403) { logout(); return null; }
+            return res.json();
+        }
+
+        async function loadPending() {
+            const data = await authFetch(`${API_BASE}/admin/pending-volunteers`);
+            const list = document.getElementById('pendingList');
+            if (!data || !data.volunteers || data.volunteers.length === 0) {
+                list.innerHTML = '<p class="text-center text-muted" style="padding:2rem;">No pending approvals 🎉</p>';
+                return;
+            }
+            list.innerHTML = data.volunteers.map(v => `
+                <div class="approval-card">
+                    <div class="approval-header">
+                        <div>
+                            <div class="approval-name">${v.display_name || 'Unknown'}</div>
+                            <div class="approval-email">${v.email}</div>
+                        </div>
+                        <span class="badge badge-pending">Pending</span>
+                    </div>
+                    <div class="approval-meta">
+                        <span class="approval-meta-item">📊 ${v.experience_level || 'N/A'}</span>
+                        <span class="approval-meta-item">📅 ${v.created_at ? new Date(v.created_at).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                    <div class="approval-skills">
+                        ${(v.skills || []).map(s => `<span class="skill-tag">${s}</span>`).join('')}
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn btn-success btn-sm" onclick="approveUser('${v.id}')">✅ Approve</button>
+                        <button class="btn btn-danger btn-sm" onclick="rejectUser('${v.id}')">❌ Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadUsers() {
+            const role = document.getElementById('filterRole').value;
+            const params = role ? `?role=${role}` : '';
+            const data = await authFetch(`${API_BASE}/admin/users${params}`);
+            if (!data) return;
+
+            document.getElementById('statTotal').textContent = data.total || 0;
+            document.getElementById('statPending').textContent = data.users ? data.users.filter(u => u.status === 'pending').length : 0;
+            document.getElementById('statNGOs').textContent = data.users ? data.users.filter(u => u.role === 'ngo').length : 0;
+            document.getElementById('statVolunteers').textContent = data.users ? data.users.filter(u => u.role === 'volunteer').length : 0;
+
+            const tbody = document.getElementById('usersTableBody');
+            if (!data.users || data.users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No users found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.users.map(u => `
+                <tr>
+                    <td>${u.display_name || '-'}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge badge-${u.role === 'admin' ? 'assigned' : u.role === 'ngo' ? 'pending' : 'low'}">${u.role}</span></td>
+                    <td><span class="badge badge-${u.status === 'approved' ? 'success' : u.status === 'pending' ? 'warning' : 'high'}">${u.status}</span></td>
+                    <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                    <td>
+                        ${u.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="approveUser('${u.id}')">Approve</button>` : ''}
+                        ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')">Remove</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function approveUser(userId) {
+            if (!confirm('Approve this volunteer?')) return;
+            await authFetch(`${API_BASE}/admin/approve/${userId}`, { method: 'POST' });
+            loadPending();
+            loadUsers();
+        }
+
+        async function rejectUser(userId) {
+            if (!confirm('Reject/remove this user?')) return;
+            await authFetch(`${API_BASE}/admin/reject/${userId}`, { method: 'POST' });
+            loadPending();
+            loadUsers();
+        }
+
+        // Init is handled by DOMContentLoaded above
+    </script>
+</body>
+</html>

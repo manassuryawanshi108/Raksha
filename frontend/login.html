@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Raksha</title>
+    <meta name="description" content="Sign in or create your Raksha account to access the humanitarian resource platform.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <img src="assets/logo.png" alt="Raksha">
+                <h1>Raksha</h1>
+            </div>
+
+            <!-- Tabs -->
+            <div class="auth-tabs" id="authTabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Log In</button>
+                <button class="auth-tab" onclick="switchTab('register')">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Your password" required>
+                </div>
+                <div id="loginError" class="alert alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">Log In</button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label" for="regName">Full Name</label>
+                    <input type="text" id="regName" class="form-control" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="regEmail">Email</label>
+                    <input type="email" id="regEmail" class="form-control" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="regPassword">Password</label>
+                    <input type="password" id="regPassword" class="form-control" placeholder="Min 6 characters" minlength="6" required>
+                </div>
+
+                <!-- Role Selector -->
+                <label class="form-label">I am a...</label>
+                <div class="role-selector" id="roleSelector">
+                    <div class="role-option active" onclick="selectRole('ngo')" id="roleNgo">
+                        <div class="role-icon">🏢</div>
+                        <div class="role-label">NGO</div>
+                        <div class="role-desc">Report issues & request help</div>
+                    </div>
+                    <div class="role-option" onclick="selectRole('volunteer')" id="roleVolunteer">
+                        <div class="role-icon">🤝</div>
+                        <div class="role-label">Volunteer</div>
+                        <div class="role-desc">Offer skills & help communities</div>
+                    </div>
+                </div>
+
+                <!-- NGO fields -->
+                <div id="ngoFields">
+                    <div class="form-group">
+                        <label class="form-label" for="orgName">Organization Name</label>
+                        <input type="text" id="orgName" class="form-control" placeholder="Your NGO name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="regNumber">Registration Number</label>
+                        <input type="text" id="regNumber" class="form-control" placeholder="NGO registration ID">
+                    </div>
+                </div>
+
+                <!-- Volunteer fields -->
+                <div id="volunteerFields" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label" for="volSkillsReg">Skills (comma-separated)</label>
+                        <input type="text" id="volSkillsReg" class="form-control" placeholder="medical, teaching, plumbing">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="expLevel">Experience Level</label>
+                        <select class="form-control" id="expLevel">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="registerError" class="alert alert-error hidden"></div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="registerBtn">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                <a href="index.html">← Back to Raksha</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let selectedRole = 'ngo';
+
+        // Check hash for initial tab
+        if (window.location.hash === '#register') switchTab('register');
+
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.auth-tab');
+            tabs[0].classList.toggle('active', tab === 'login');
+            tabs[1].classList.toggle('active', tab === 'register');
+            document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+            document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+            // Clear errors
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('registerError').classList.add('hidden');
+        }
+
+        function selectRole(role) {
+            selectedRole = role;
+            document.getElementById('roleNgo').classList.toggle('active', role === 'ngo');
+            document.getElementById('roleVolunteer').classList.toggle('active', role === 'volunteer');
+            document.getElementById('ngoFields').classList.toggle('hidden', role !== 'ngo');
+            document.getElementById('volunteerFields').classList.toggle('hidden', role !== 'volunteer');
+        }
+
+        function showError(elemId, msg) {
+            const el = document.getElementById(elemId);
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validateLoginForm() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email) {
+                showError('loginError', 'Email is required');
+                return false;
+            }
+            if (!validateEmail(email)) {
+                showError('loginError', 'Please enter a valid email address');
+                return false;
+            }
+            if (!password) {
+                showError('loginError', 'Password is required');
+                return false;
+            }
+            if (password.length < 6) {
+                showError('loginError', 'Password must be at least 6 characters');
+                return false;
+            }
+            return true;
+        }
+
+        function validateRegisterForm() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+
+            if (!name) {
+                showError('registerError', 'Full name is required');
+                return false;
+            }
+            if (name.length < 2) {
+                showError('registerError', 'Full name must be at least 2 characters');
+                return false;
+            }
+            if (!email) {
+                showError('registerError', 'Email is required');
+                return false;
+            }
+            if (!validateEmail(email)) {
+                showError('registerError', 'Please enter a valid email address');
+                return false;
+            }
+            if (!password) {
+                showError('registerError', 'Password is required');
+                return false;
+            }
+            if (password.length < 6) {
+                showError('registerError', 'Password must be at least 6 characters');
+                return false;
+            }
+
+            if (selectedRole === 'ngo') {
+                const orgName = document.getElementById('orgName').value.trim();
+                if (!orgName) {
+                    showError('registerError', 'Organization name is required');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('loginError').classList.add('hidden');
+
+            // Validate form
+            if (!validateLoginForm()) {
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            btn.textContent = 'Logging in...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('loginEmail').value.trim(),
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Login failed');
+
+                // Store session
+                localStorage.setItem('raksha_user', JSON.stringify(data.user));
+                localStorage.setItem('raksha_token', data.token);
+
+                // Redirect based on role
+                if (data.user.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else if (data.user.status === 'pending') {
+                    window.location.href = 'pending.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                showError('loginError', err.message);
+            } finally {
+                btn.textContent = 'Log In';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            document.getElementById('registerError').classList.add('hidden');
+
+            // Validate form
+            if (!validateRegisterForm()) {
+                return;
+            }
+
+            const btn = document.getElementById('registerBtn');
+            btn.textContent = 'Creating account...';
+            btn.disabled = true;
+
+            const payload = {
+                email: document.getElementById('regEmail').value.trim(),
+                password: document.getElementById('regPassword').value,
+                display_name: document.getElementById('regName').value.trim(),
+                role: selectedRole
+            };
+
+            if (selectedRole === 'ngo') {
+                payload.organization_name = document.getElementById('orgName').value.trim();
+                payload.registration_number = document.getElementById('regNumber').value.trim();
+            } else {
+                payload.skills = document.getElementById('volSkillsReg').value
+                    .split(',').map(s => s.trim()).filter(Boolean);
+                payload.experience_level = document.getElementById('expLevel').value;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Registration failed');
+
+                localStorage.setItem('raksha_user', JSON.stringify(data.user));
+                localStorage.setItem('raksha_token', data.token);
+
+                if (data.user.status === 'pending') {
+                    window.location.href = 'pending.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                showError('registerError', err.message);
+            } finally {
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

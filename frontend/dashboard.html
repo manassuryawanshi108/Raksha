@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Raksha</title>
+    <meta name="description" content="Monitor and manage all humanitarian issues on the Raksha platform.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">
+                <img src="assets/logo.png" alt="Raksha">Raksha
+            </a>
+            <div class="menu-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+            <ul class="navbar-nav" id="navbarNav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="map.html">Map</a></li>
+                <li><a href="ngo.html">NGO Portal</a></li>
+                <li><a href="volunteer.html">Volunteers</a></li>
+            </ul>
+            <div class="navbar-actions" id="navAuth">
+                <a href="login.html" class="btn btn-secondary btn-sm">Log in</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Issue Dashboard</h1>
+            <p>Monitor and manage all humanitarian issues</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-2">
+            <div class="grid grid-4">
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-control" id="filterStatus" onchange="applyFilters()">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-control" id="filterCategory" onchange="applyFilters()">
+                        <option value="">All Categories</option>
+                        <option value="Water">Water</option>
+                        <option value="Food">Food</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Shelter">Shelter</option>
+                        <option value="Education">Education</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-control" id="filterPriority" onchange="applyFilters()">
+                        <option value="">All Priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary btn-block" onclick="loadIssues()">Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Location</th>
+                        <th>Issue</th>
+                        <th>Category</th>
+                        <th>People</th>
+                        <th>Urgency</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Photo</th>
+                        <th>Accessibility</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="issuesTableBody">
+                    <tr>
+                        <td colspan="10" class="text-center">
+                            <div class="spinner"></div>
+                            Loading issues...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script src="js/auth-guard.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initAuthGuard();
+            loadIssues();
+        });
+    </script>
+</body>
+</html>

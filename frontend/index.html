@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raksha — AI-Powered Humanitarian Resource Platform</title>
+    <meta name="description" content="Raksha connects NGOs with skilled volunteers to tackle humanitarian crises through AI-powered resource allocation.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand">
+                <img src="assets/logo.png" alt="Raksha">
+                Raksha
+            </a>
+            <div class="menu-toggle" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
+            </div>
+            <ul class="navbar-nav" id="navbarNav">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="map.html">Map</a></li>
+                <li><a href="volunteer.html">Volunteers</a></li>
+            </ul>
+            <div class="navbar-actions" id="navAuth">
+                <a href="login.html" class="btn btn-secondary btn-sm">Log in</a>
+                <a href="login.html#register" class="btn btn-primary btn-sm">Sign up</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <div class="hero-content">
+            <h1>Protecting Communities Through Intelligent Action</h1>
+            <p>Raksha connects humanitarian needs with the right volunteers and resources — powered by AI classification and smart matching.</p>
+            <div class="hero-actions">
+                <a href="upload.html" class="btn btn-primary btn-lg">📝 Report an Issue</a>
+                <a href="dashboard.html" class="btn btn-secondary btn-lg">📊 View Dashboard</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Overview -->
+    <div class="container">
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalIssues">-</div>
+                <div class="stat-label">Total Issues</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pendingIssues">-</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="highPriority">-</div>
+                <div class="stat-label">High Priority</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="peopleAffected">-</div>
+                <div class="stat-label">People Affected</div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <h2 class="text-center mb-2">Platform Features</h2>
+        <div class="grid grid-3">
+            <div class="card feature-card">
+                <div class="card-icon">📊</div>
+                <h3>Dashboard</h3>
+                <p>Real-time overview of all humanitarian issues with urgency levels and priority rankings.</p>
+                <a href="dashboard.html" class="btn btn-outline btn-block mt-2 btn-sm">View Dashboard</a>
+            </div>
+            <div class="card feature-card">
+                <div class="card-icon">📍</div>
+                <h3>Interactive Map</h3>
+                <p>Visualize issues on a map with color-coded markers based on urgency levels.</p>
+                <a href="map.html" class="btn btn-outline btn-block mt-2 btn-sm">View Map</a>
+            </div>
+            <div class="card feature-card">
+                <div class="card-icon">📤</div>
+                <h3>Quick Upload</h3>
+                <p>Upload NGO data via form or CSV. AI automatically classifies and prioritizes issues.</p>
+                <a href="upload.html" class="btn btn-outline btn-block mt-2 btn-sm">Upload Data</a>
+            </div>
+            <div class="card feature-card">
+                <div class="card-icon">🤖</div>
+                <h3>AI Classification</h3>
+                <p>Smart categorization into Water, Food, Healthcare, Shelter, and Education.</p>
+            </div>
+            <div class="card feature-card">
+                <div class="card-icon">👥</div>
+                <h3>Volunteer Matching</h3>
+                <p>Match volunteers to tasks based on skills and geographic proximity.</p>
+                <a href="volunteer.html" class="btn btn-outline btn-block mt-2 btn-sm">Manage Volunteers</a>
+            </div>
+            <div class="card feature-card">
+                <div class="card-icon">📋</div>
+                <h3>Task Assignment</h3>
+                <p>Assign tasks to volunteers and track completion status in real-time.</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <h2 class="text-center mt-3 mb-2">Quick Actions</h2>
+        <div class="grid grid-4">
+            <a href="upload.html" class="btn btn-primary btn-lg">📝 Report Issue</a>
+            <a href="dashboard.html" class="btn btn-secondary btn-lg">📊 View All Issues</a>
+            <a href="map.html" class="btn btn-primary btn-lg">🗺️ View Map</a>
+            <a href="volunteer.html" class="btn btn-secondary btn-lg">🤝 Volunteer</a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script src="js/auth-guard.js"></script>
+    <script>
+        function toggleMenu() {
+            document.getElementById('navbarNav').classList.toggle('active');
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('http://localhost:8000/issues/stats/summary');
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('totalIssues').textContent = data.summary.total_issues;
+                    document.getElementById('pendingIssues').textContent = data.summary.pending_issues;
+                    document.getElementById('highPriority').textContent = data.summary.high_priority_issues;
+                    document.getElementById('peopleAffected').textContent = data.summary.total_people_affected.toLocaleString();
+                }
+            } catch (error) {
+                console.log('Stats unavailable - backend may not be running');
+                document.getElementById('totalIssues').textContent = '0';
+                document.getElementById('pendingIssues').textContent = '0';
+                document.getElementById('highPriority').textContent = '0';
+                document.getElementById('peopleAffected').textContent = '0';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initAuthGuard(); // blocks if not logged in
+            loadStats();
+        });
+    </script>
+</body>
+</html>

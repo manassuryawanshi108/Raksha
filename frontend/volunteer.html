@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volunteers — Raksha</title>
+    <meta name="description" content="Manage volunteers and match them to humanitarian tasks on Raksha.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* ── Decline Modal ── */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-box {
+            background: var(--bg-card);
+            border: 2px solid #111111;
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            width: 100%;
+            max-width: 480px;
+        }
+        .modal-box h2 {
+            font-family: var(--font-serif);
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+        }
+        .modal-box p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-family: var(--font-body);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand"><img src="assets/logo.png" alt="Raksha">Raksha</a>
+            <div class="menu-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+            <ul class="navbar-nav" id="navbarNav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="upload.html">Report</a></li>
+                <li><a href="map.html">Map</a></li>
+                <li><a href="ngo.html">NGO Portal</a></li>
+                <li><a href="volunteer.html" class="active">Volunteers</a></li>
+            </ul>
+            <div class="navbar-actions" id="navAuth">
+                <a href="login.html" class="btn btn-secondary btn-sm">Log in</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Volunteer Management</h1>
+            <p>View volunteers and manage humanitarian task assignments</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid mb-2">
+            <div class="stat-card">
+                <div class="stat-value" id="totalVolunteers">-</div>
+                <div class="stat-label">Total Volunteers</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="availableVolunteers">-</div>
+                <div class="stat-label">Available</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="assignedTasks">-</div>
+                <div class="stat-label">Assigned Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completedTasks">-</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <!-- Change 4a: Available Tasks (volunteers only) -->
+        <div class="card mb-2 hidden" id="availableTasksSection">
+            <div class="card-header">
+                <h2 class="card-title">📋 Available Tasks</h2>
+                <button class="btn btn-outline btn-sm" onclick="loadAvailableTasks()">Refresh</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Issue</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="availableTasksBody">
+                        <tr><td colspan="5" class="text-center"><div class="spinner"></div>Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- All Volunteers -->
+        <div class="card mb-2">
+            <div class="card-header">
+                <h2 class="card-title">👥 All Volunteers</h2>
+                <button class="btn btn-outline btn-sm" onclick="loadVolunteers()">Refresh</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th><th>Skills</th><th>Location</th><th>Contact</th><th>Status</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="volunteersTableBody">
+                        <tr><td colspan="6" class="text-center"><div class="spinner"></div>Loading volunteers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Assigned Tasks -->
+        <div class="card mt-2">
+            <div class="card-header">
+                <h2 class="card-title">📋 Assigned Tasks</h2>
+                <button class="btn btn-outline btn-sm" onclick="loadTasks()">Refresh</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Issue</th><th>Location</th><th>Volunteer</th><th>Category</th><th>Status</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody">
+                        <tr><td colspan="6" class="text-center"><div class="spinner"></div>Loading tasks...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change 4c: Decline Modal -->
+    <div class="modal-backdrop hidden" id="declineModal" role="dialog" aria-modal="true" aria-labelledby="declineModalTitle">
+        <div class="modal-box">
+            <h2 id="declineModalTitle">Decline Task</h2>
+            <p>You may provide an optional reason for declining. This will be shared with the NGO coordinator.</p>
+            <div class="form-group">
+                <label class="form-label" for="declineReasonInput">Reason (optional)</label>
+                <textarea id="declineReasonInput" class="form-control" rows="3"
+                          placeholder="e.g. scheduling conflict, skills mismatch…"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-sm" onclick="closeDeclineModal()" id="cancelDeclineBtn">Cancel</button>
+                <button class="btn btn-danger btn-sm" onclick="confirmDecline()" id="confirmDeclineBtn">Confirm Decline</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script src="js/auth-guard.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/volunteer.js"></script>
+    <script>
+        function toggleMenu(){document.getElementById('navbarNav').classList.toggle('active');}
+        // Auth + data init is handled by volunteer.js DOMContentLoaded (awaits initAuthGuard first)
+    </script>
+</body>
+</html>

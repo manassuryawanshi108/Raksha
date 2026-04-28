@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map — Raksha</title>
+    <meta name="description" content="Visualize humanitarian issues on an interactive map.">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand"><img src="assets/logo.png" alt="Raksha">Raksha</a>
+            <div class="menu-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+            <ul class="navbar-nav" id="navbarNav">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="map.html" class="active">Map</a></li>
+                <li><a href="ngo.html">NGO Portal</a></li>
+                <li><a href="volunteer.html">Volunteers</a></li>
+            </ul>
+            <div class="navbar-actions" id="navAuth">
+                <a href="login.html" class="btn btn-secondary btn-sm">Log in</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container">
+        <div class="card mb-2">
+            <h1>Issue Map</h1>
+            <p class="text-muted">Visualize humanitarian issues on the map</p>
+        </div>
+
+        <!-- Map Controls -->
+        <div class="card mb-2">
+            <div class="grid grid-4">
+                <div class="form-group">
+                    <label class="form-label">Filter by Category</label>
+                    <select class="form-control" id="filterCategory" onchange="filterMarkers()">
+                        <option value="">All Categories</option>
+                        <option value="Water">Water</option>
+                        <option value="Food">Food</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Shelter">Shelter</option>
+                        <option value="Education">Education</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter by Priority</label>
+                    <select class="form-control" id="filterPriority" onchange="filterMarkers()">
+                        <option value="">All Priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Filter by Status</label>
+                    <select class="form-control" id="filterStatus" onchange="filterMarkers()">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary btn-block" onclick="loadMapMarkers()">Refresh Map</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="card mb-2">
+            <h3 style="margin-bottom: 0.5rem;">Legend</h3>
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: #ef4444;"></div>
+                    <span>High Urgency (≥70%)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: #f59e0b;"></div>
+                    <span>Medium Urgency (40-70%)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: #10b981;"></div>
+                    <span>Low Urgency (&lt;40%)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+        <!-- Fallback message if API key not set -->
+        <div id="apiKeyWarning" class="alert alert-warning mt-2 hidden">
+            <strong>Google Maps API Key Required:</strong>
+            Edit <code>map.html</code> and replace <code>YOUR_API_KEY</code> with your actual Google Maps API key.
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script src="js/auth-guard.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/map.js"></script>
+    <script>
+        function toggleMenu(){document.getElementById('navbarNav').classList.toggle('active');}
+        document.addEventListener('DOMContentLoaded', () => initAuthGuard());
+    </script>
+</body>
+</html>

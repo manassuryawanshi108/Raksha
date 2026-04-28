@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Approval — Raksha</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="index.html" class="navbar-brand"><img src="assets/logo.png" alt="Raksha">Raksha</a>
+            <div class="navbar-actions">
+                <button class="btn btn-secondary btn-sm" onclick="logout()">Log out</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pending-page">
+        <div class="pending-content">
+            <div class="pending-icon">⏳</div>
+            <h2>Account Pending Approval</h2>
+            <p>Your volunteer account has been created and is awaiting admin approval. You'll gain full access once an admin reviews your profile.</p>
+            <div class="card" style="text-align:left;">
+                <h3 class="card-title mb-1">Your Profile</h3>
+                <p id="pendingName" class="text-muted"></p>
+                <p id="pendingEmail" class="text-muted"></p>
+                <p id="pendingSkills" class="text-muted"></p>
+            </div>
+            <a href="index.html" class="btn btn-secondary mt-2">Back to Home</a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2026 Raksha. AI-powered humanitarian resource allocation.</p>
+    </footer>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('raksha_user');
+            localStorage.removeItem('raksha_token');
+            window.location.href = 'login.html';
+        }
+
+        const user = JSON.parse(localStorage.getItem('raksha_user') || '{}');
+        if (user.display_name) document.getElementById('pendingName').textContent = 'Name: ' + user.display_name;
+        if (user.email) document.getElementById('pendingEmail').textContent = 'Email: ' + user.email;
+        if (user.skills && user.skills.length) document.getElementById('pendingSkills').textContent = 'Skills: ' + user.skills.join(', ');
+    </script>
+</body>
+</html>
